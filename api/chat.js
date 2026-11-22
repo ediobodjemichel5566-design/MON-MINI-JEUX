@@ -10,7 +10,7 @@ export default async function handler(req, res) {
     return res.status(500).json({ reply: 'Cle GEMINI_API_KEY manquante.' });
   }
 
-  const host = '://googleapis.com';
+  const host = 'generativelanguage.googleapis.com';
   const path = '/v1beta/models/gemini-2.5-flash:generateContent?key=';
   const url = 'https://' + host + path + apiKey;
 
