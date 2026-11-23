@@ -3,156 +3,68 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Mon Mini-Jeu</title>
+  <title>Mon Assistant IA</title>
   <style>
-    body {
-      margin: 0;
-      font-family: system-ui, -apple-system, sans-serif;
-      background-color: #020617;
-      color: white;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      padding: 16px;
-    }
-    .carte {
-      width: 100%;
-      max-width: 360px;
-      background: #0f172a;
-      border: 1px solid #1e293b;
-      border-radius: 20px;
-      padding: 24px;
-      text-align: center;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
-    }
-    .entete {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 14px;
-      color: #94a3b8;
-      margin-bottom: 20px;
-    }
-    .badge {
-      background: #1e293b;
-      color: #34d399;
-      padding: 6px 12px;
-      border-radius: 999px;
-      font-weight: bold;
-    }
-    .ecran {
-      height: 180px;
-      background: linear-gradient(135deg, #10b981, #0f766e);
-      border-radius: 16px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      margin-bottom: 20px;
-    }
-    .label {
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: #d1fae5;
-      margin-bottom: 6px;
-    }
-    .valeur {
-      font-size: 48px;
-      font-weight: 800;
-    }
-    .message {
-      font-size: 14px;
-      color: #cbd5e1;
-      min-height: 20px;
-      margin-bottom: 20px;
-    }
-    button {
-      width: 100%;
-      padding: 14px;
-      border: none;
-      border-radius: 12px;
-      font-size: 16px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    .btn-demarrer {
-      background: #2563eb;
-      color: white;
-    }
-    .btn-valider {
-      background: #10b981;
-      color: #020617;
-    }
+    body { margin: 0; font-family: system-ui, sans-serif; background: #020617; color: white; display: flex; justify-content: center; height: 100dvh; }
+    .app { width: 100%; max-width: 420px; display: flex; flex-direction: column; background: #0f172a; }
+    .header { padding: 16px; background: #1e293b; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+    .header a { color: #34d399; text-decoration: none; font-size: 13px; }
+    .messages { flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+    .msg { padding: 10px 14px; border-radius: 14px; max-width: 80%; font-size: 14px; line-height: 1.4; white-space: pre-wrap; }
+    .bot { background: #1e293b; align-self: flex-start; }
+    .user { background: #2563eb; align-self: flex-end; }
+    .form { display: flex; gap: 8px; padding: 12px; border-top: 1px solid #1e293b; }
+    input { flex: 1; padding: 12px; border-radius: 10px; border: none; background: #1e293b; color: white; outline: none; }
+    button { padding: 12px 16px; border-radius: 10px; border: none; background: #10b981; color: #020617; font-weight: bold; cursor: pointer; }
   </style>
 </head>
 <body>
-  <div class="carte">
-    <div class="entete">
-      <span>Mini-Jeu Démo</span>
-      <span class="badge">Points : <span id="score">100</span></span>
+  <div class="app">
+    <div class="header">
+      <span>🤖 Assistant Gemini</span>
+      <a href="/">← Retour au jeu</a>
     </div>
-
-    <div class="ecran">
-      <div class="label">Multiplicateur</div>
-      <div class="valeur" id="valeur">1.00x</div>
+    <div class="messages" id="messages">
+      <div class="msg bot">Bonjour ! Je suis connecté à Gemini. Posez-moi n'importe quelle question.</div>
     </div>
-
-    <div class="message" id="message">Appuyez sur Démarrer pour jouer</div>
-
-    <button id="bouton" class="btn-demarrer" onclick="action()">Démarrer (-10 pts)</button>
+    <form class="form" onsubmit="envoyer(event)">
+      <input id="champ" placeholder="Écrivez votre message..." autocomplete="off" />
+      <button type="submit">Envoyer</button>
+    </form>
   </div>
 
   <script>
-    let score = 100;
-    let valeur = 1.0;
-    let enCours = false;
-    let chrono = null;
+    const box = document.getElementById('messages');
+    const champ = document.getElementById('champ');
 
-    const elScore = document.getElementById('score');
-    const elValeur = document.getElementById('valeur');
-    const elMessage = document.getElementById('message');
-    const elBouton = document.getElementById('bouton');
+    function ajouterMsg(texte, type) {
+      const div = document.createElement('div');
+      div.className = 'msg ' + type;
+      div.textContent = texte;
+      box.appendChild(div);
+      box.scrollTop = box.scrollHeight;
+      return div;
+    }
 
-    function action() {
-      if (!enCours) {
-        if (score < 10) {
-          score = 100;
-          elScore.textContent = score;
-          elMessage.textContent = 'Points rechargés à 100 !';
-          return;
-        }
-        score -= 10;
-        elScore.textContent = score;
-        valeur = 1.0;
-        enCours = true;
-        elBouton.className = 'btn-valider';
-        elMessage.textContent = 'En cours... Arrêtez-vous avant la limite !';
+    async function envoyer(e) {
+      e.preventDefault();
+      const q = champ.value.trim();
+      if (!q) return;
+      ajouterMsg(q, 'user');
+      champ.value = '';
 
-        const limite = Number((Math.random() * 4 + 1.2).toFixed(2));
-        chrono = setInterval(() => {
-          valeur = Number((valeur + 0.05).toFixed(2));
-          elValeur.textContent = valeur.toFixed(2) + 'x';
-          elBouton.textContent = 'Valider (' + Math.round(10 * valeur) + ' pts)';
+      const attente = ajouterMsg('Réflexion en cours...', 'bot');
 
-          if (valeur >= limite) {
-            clearInterval(chrono);
-            enCours = false;
-            elMessage.textContent = 'Perdu ! Arrêté à ' + valeur.toFixed(2) + 'x';
-            elBouton.className = 'btn-demarrer';
-            elBouton.textContent = 'Démarrer (-10 pts)';
-          }
-        }, 100);
-      } else {
-        clearInterval(chrono);
-        enCours = false;
-        const gain = Math.round(10 * valeur);
-        score += gain;
-        elScore.textContent = score;
-        elMessage.textContent = 'Bravo ! Vous gagnez ' + gain + ' points (' + valeur.toFixed(2) + 'x)';
-        elBouton.className = 'btn-demarrer';
-        elBouton.textContent = 'Démarrer (-10 pts)';
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: q })
+        });
+        const data = await res.json();
+        attente.textContent = data.reply;
+      } catch (err) {
+        attente.textContent = 'Erreur réseau. Réessayez.';
       }
     }
   </script>
